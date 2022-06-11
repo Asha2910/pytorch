@@ -38,7 +38,9 @@ DEPS_MAP = {
     "//third-party/psimd:psimd": "//third_party:psimd",
     "//third-party/pthreadpool:pthreadpool": "//third_party:pthreadpool",
     "//third-party/pthreadpool:pthreadpool_header": "//third_party:pthreadpool_header",
+    "//third-party/pyyaml:pyyaml": "//third_party:pyyaml",
     "//third-party/ruy:ruy_xplat_lib": "//third_party:ruy_lib",
+    "//third-party/typing-extensions:typing-extensions": "//third_party:typing-extensions",
 }
 
 # map fbsource deps to OSS deps
@@ -46,15 +48,26 @@ def to_oss_deps(deps = []):
     new_deps = []
     for dep in deps:
         new_deps += map_deps(dep)
+    print(new_deps)
     return new_deps
 
 def map_deps(dep):
+    print(dep)
+
+    # keep relative root targets
+    if dep.startswith(":"):
+        return [dep]
+
     # remove @fbsource prefix
     if dep.startswith("@fbsource"):
         dep = dep[len("@fbsource"):]
 
     # ignore all fbsource linker_lib targets
-    if dep.startswith("//xplat/third-party/linker_lib"):
+    if dep.startswith("//xplat/third-party/linker_lib:"):
+        return []
+
+    # ignore all folly libraries
+    if dep.startswith("//xplat/folly:"):
         return []
 
     # map targets in caffe2 root folder. Just use relative path

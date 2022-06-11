@@ -76,20 +76,6 @@ cxx_library(
     visibility = ['PUBLIC'],
 )
 
-cxx_library(
-    name = "common_core",
-    srcs = ['caffe2/core/common.cc'],
-    deps = [':caffe2_headers', '//c10:c10'],
-    exported_deps = [],
-    compiler_flags = ['-frtti', '-Os', '-Wno-unknown-pragmas', '-Wno-write-strings', '-Wno-unused-variable', '-Wno-unused-function', '-Wno-deprecated-declarations', '-Wno-shadow', '-Wno-global-constructors', '-Wno-missing-prototypes', '-std=gnu++17'],
-    preferred_linkage = "static",
-    header_namespace = "caffe2",
-    headers = [],
-    link_whole = True,
-    platform_preprocessor_flags = [['windows', ['-D_WINDOWS', '-D_WIN32', '-DWIN32', '-DNOMINMAX', '-D_CRT_SECURE_NO_WARNINGS', '-D_USE_MATH_DEFINES']], ['windows.*64$', ['-D_WIN64']]],
-    visibility = ['PUBLIC'],
-)
-
 build_aten_cpu(
     name = "aten_cpu",
     srcs = jit_core_sources +
@@ -107,35 +93,6 @@ build_aten_cpu(
         # Needed by ATen/native/EmbeddingBag.cpp
         "caffe2/perfkernels/embedding_lookup_idx.cc",
     ],
-)
-
-fb_xplat_genrule(
-    name = "generate_aten_config",
-    srcs = [
-        "aten/src/ATen/Config.h.in",
-    ],
-    cmd = " ".join([
-        "sed",
-        "-e 's/@AT_MKLDNN_ENABLED@/ATEN_MKLDNN_ENABLED_FBXPLAT/g'",
-        "-e 's/@AT_MKL_ENABLED@/ATEN_MKL_ENABLED_FBXPLAT/g'",
-        "-e 's/@AT_MKL_SEQUENTIAL@/ATEN_MKL_SEQUENTIAL_FBXPLAT/g'",
-        "-e 's/@AT_FFTW_ENABLED@/0/g'",
-        "-e 's/@AT_POCKETFFT_ENABLED@/0/g'",
-        "-e 's/@AT_NNPACK_ENABLED@/ATEN_NNPACK_ENABLED_FBXPLAT/g'",
-        "-e 's/@CAFFE2_STATIC_LINK_CUDA_INT@/CAFFE2_STATIC_LINK_CUDA_FBXPLAT/g'",
-        "-e 's/@AT_BUILD_WITH_BLAS@/USE_BLAS_FBXPLAT/g'",
-        "-e 's/@AT_PARALLEL_OPENMP@/AT_PARALLEL_OPENMP_FBXPLAT/g'",
-        "-e 's/@AT_PARALLEL_NATIVE@/AT_PARALLEL_NATIVE_FBXPLAT/g'",
-        "-e 's/@AT_PARALLEL_NATIVE_TBB@/AT_PARALLEL_NATIVE_TBB_FBXPLAT/g'",
-        "-e 's/@AT_BUILD_WITH_LAPACK@/USE_LAPACK_FBXPLAT/g'",
-        "-e 's/@AT_BLAS_F2C@/AT_BLAS_F2C_FBXPLAT/g'",
-        "-e 's/@AT_BLAS_USE_CBLAS_DOT@/AT_BLAS_USE_CBLAS_DOT_FBXPLAT/g'",
-        "aten/src/ATen/Config.h.in > $OUT/Config.h",
-    ]),
-    outs = {
-        "Config.h": ["Config.h"],
-    },
-    default_outs = ["."],
 )
 
 gen_aten_files(
@@ -188,16 +145,6 @@ cxx_library(
         "//c10:c10",
     ],
 )
-
-python_library(
-    name = "aten_code_template",
-    srcs = subdir_glob([
-        ("aten", "src/ATen/code_template.py"),
-    ]),
-    base_module = "",
-    visibility = ["PUBLIC"],
-)
-
 
 cxx_library(
     name = "torch_common",
@@ -366,62 +313,6 @@ cxx_library(
         ],
         enable_flatbuffer = False,
     ),
-)
-
-python_library(
-    name = "gen_oplist_lib",
-    srcs = subdir_glob([
-        ("tools/code_analyzer", "gen_oplist.py"),
-        ("tools/code_analyzer", "gen_op_registration_allowlist.py"),
-    ]),
-    base_module = "",
-    deps = [
-        "//third_party:pyyaml",
-        "//tools/lite_interpreter:gen_selected_mobile_ops_header",
-        "//torchgen:torchgen",
-    ],
-)
-
-python_binary(
-    name = "gen_oplist",
-    main_module = "gen_oplist",
-    visibility = ["PUBLIC"],
-    deps = [
-        ":gen_oplist_lib",
-    ],
-)
-
-python_library(
-    name = "gen_operators_yaml_lib",
-    srcs = subdir_glob([
-        ("tools/code_analyzer", "gen_operators_yaml.py"),
-        ("tools/code_analyzer", "gen_op_registration_allowlist.py"),
-    ]),
-    base_module = "",
-    deps = [
-        "//third_party:pyyaml",
-        "//torchgen:torchgen",
-    ],
-)
-
-python_binary(
-    name = "gen_aten_bin",
-    main_module = "torchgen.gen",
-    visibility = [
-        "PUBLIC",
-    ],
-    deps = [
-        "//torchgen:torchgen",
-    ],
-)
-
-python_binary(
-    name = "gen_operators_yaml",
-    main_module = "gen_operators_yaml",
-    visibility = ["PUBLIC"],
-    deps = [
-        ":gen_operators_yaml_lib",
-    ],
 )
 
 cxx_binary(
