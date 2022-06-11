@@ -3639,8 +3639,12 @@ struct to_ir {
         }
         auto input =
             emitSugaredExpr(apply.inputs()[0], 1)->asValue(loc, method);
-
-        return std::make_shared<SimpleValue>(emitIndex(loc, self, {input}));
+        if (input->type()->kind() == TypeKind::TupleType) {
+          return std::make_shared<SimpleValue>(
+              emitIndex(loc, self, createTupleUnpack(input)));
+        } else {
+          return std::make_shared<SimpleValue>(emitIndex(loc, self, {input}));
+        }
       }
       default:
         TORCH_INTERNAL_ASSERT(false, "unknown special form: ", form);
